@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Create Time: 9/11/2015 8:13p
 # 说明：从网络上获得的时间,使用库,接下来例子是不用任何库写一个ntp客户端
@@ -13,4 +13,4 @@ def print_time():
 	print ctime(response.tx_time)
 	
 if __name__=='__main__':
-    print_time()	
+	print_time()	
