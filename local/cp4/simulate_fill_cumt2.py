@@ -7,25 +7,22 @@
 # TODO: 模拟登陆v2ex还有某些https的网站，带验证码的识别库，集成多线程爬虫下载附件
 
 import requests
+import re
 import os
-from bs4 import BeautifulSoup as bs
+
 from cookielib import LWPCookieJar
 
 URL = 'http://ids.cumt.edu.cn/authserver/login?service=http%3A%2F%2Fmy.cumt.edu.cn%2Findex.portal'
 REFER_URL = URL
 URL_AFTER_LOGIN = 'http://my.cumt.edu.cn/index.portal'
 
-USERNAME = '04131434'
-PASSWORD = '12345678'
+USERNAME = '041314xx'
+PASSWORD = 'xxxxxxxx'
 
-# 提取lt流水号，将数据化为一个字典
-def toJson(str_):
-    soup = bs(str_)
-    tt = {}
-    for inp in soup.form.find_all('input'):
-        if inp.get('name') != None:
-            tt[inp.get('name')] = inp.get('value')
-    return tt
+# 这个完全可以不用bs库，直接从网页源代码提取
+def get_lt(str_):
+    f = re.compile(r"name=\"lt\"\svalue=\"(.*)\"\s/>", flags = 0)
+    return f.findall(str_)[0]
 
 
 # cookie setting
@@ -35,30 +32,30 @@ header = {'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:38.0) Gecko/2
           'Referer':REFER_URL
           }
 
+payload = {'username':USERNAME,
+       'password':PASSWORD,
+       'execution':'e1s1',
+       'lt':None,
+       '_eventId':'submit'
+       }
+
+
 # if cookies existed, or not expried
 if os.path.exists('cookiejar'):
     ask = raw_input('Cookies existed. Clear them and login again?\n(y/n): ')
 else:
-    ask = 'n'
-    
+    ask = 'y'
+
 if ask == 'y':
     print "Setting Cookies Now..."
     response = s.get(URL)
-    soup = toJson(response.text)
-    payload = {'username':USERNAME,
-               'password':PASSWORD,
-               'lt': soup["lt"],
-               'execution':'e1s1',
-               '_eventId':'submit'
-               }
+    payload['lt'] = get_lt(response.text)
     response = s.post(URL, data = payload, headers = header)
     s.cookies.save(ignore_discard = True)
-
     print response.text
 else:
     print "Restoring cookie..."
     s.cookies.load(ignore_discard = True)
+    response = s.get(URL_AFTER_LOGIN, headers = header)
+    print response.text
 
-# After login sucessfully, what website you want to visit now?
-# r = s.get(URL_AFTER_LOGIN, headers = header)
-# print r.text
